@@ -1,0 +1,32 @@
+- name: Install and Configure Splunk on EC2
+  hosts: ec2
+  become: yes
+  tasks:
+    - name: Update system
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Install wget
+      yum:
+        name: wget
+        state: present
+
+    - name: Download Splunk
+      get_url:
+        url: "https://download.splunk.com/products/splunk/releases/9.4.1/linux/splunk-9.4.1-7cc4e2d6f12a-linux-x86_64.rpm"
+        dest: /tmp/splunk.rpm
+
+    - name: Install Splunk RPM
+      yum:
+        name: /tmp/splunk.rpm
+        state: present
+
+    - name: Start Splunk and accept license
+      command: /opt/splunk/bin/splunk start --accept-license --answer-yes --no-prompt
+
+    - name: Enable Splunk to start on boot
+      command: /opt/splunk/bin/splunk enable boot-start
+
+    - name: Restart Splunk
+      command: /opt/splunk/bin/splunk restart
