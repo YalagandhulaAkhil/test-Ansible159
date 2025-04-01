@@ -30,6 +30,3 @@ jobs:
       - name: Run Ansible Playbook
         run: |
           ansible-playbook -i ansible/inventory.ini ansible/install_splunk.yml
-
-      - name: Output Success Message
-        run: echo "✅ Splunk installation complete on EC2: ${{ secrets.EC2_PUBLIC_IP }}"
