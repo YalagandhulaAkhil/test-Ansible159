@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  install_splunk:
+  install-splunk:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,4 +29,4 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-          ansible-playbook -i ansible/inventory.ini ansible/install_splunk.yml
+          ansible-playbook -i ansible/inventory.ini ansible/install-splunk.yml
