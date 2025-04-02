@@ -1,0 +1,21 @@
+---
+- name: Install and Start Nginx
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Update apt/yum packages
+      ansible.builtin.package:
+        name: "*"
+        state: latest
+
+    - name: Install Nginx
+      ansible.builtin.package:
+        name: nginx
+        state: present
+
+    - name: Ensure Nginx is running
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
