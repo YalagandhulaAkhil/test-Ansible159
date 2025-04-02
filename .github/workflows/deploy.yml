@@ -1,14 +1,12 @@
-name: Deploy EC2 
+name: Deploy EC2
 
 on:
   push:
     branches:
-      - main  # Trigger on pushing to the main branch
+      - main
   pull_request:
     branches:
-      - main  # Trigger on pull request events targeting the main branch
-
-  # Allows you to run this workflow manually from the Actions tab
+      - main
   workflow_dispatch:
 
 jobs:
@@ -16,17 +14,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout code
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: latest
 
-      # Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -34,35 +29,33 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Initialize Terraform
       - name: Initialize Terraform
         run: terraform init
 
-      # Terraform Format Check
       - name: Terraform Format
         run: terraform fmt -check
 
-      # Terraform Validate
       - name: Terraform Validate
         run: terraform validate
 
-      # Terraform Plan (Show what will be deployed)
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
-      # Terraform Apply (Deploy the changes)
       - name: Terraform Apply
         run: terraform apply -auto-approve
 
-       - name: Save EC2 Public IP as output
+      - name: Save EC2 Public IP as output
         id: extract
         run: |
           PUBLIC_IP=$(terraform output -raw instance_public_ip)
           echo "public_ip=$PUBLIC_IP" >> $GITHUB_OUTPUT
 
+      - name: Write EC2 public IP to file
+        run: |
+          echo ${{ steps.extract.outputs.public_ip }} > ec2-public-ip.txt
+
       - name: Upload public IP to artifact
         uses: actions/upload-artifact@v3
         with:
           name: ec2-ip
-          path: |
-            terraform.tfstate
+          path: ec2-public-ip.txt
