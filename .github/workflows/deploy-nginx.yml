@@ -1,4 +1,4 @@
-name: Deploy Nginx via Ansible
+name: Deploy Nginx with Ansible
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install Ansible
@@ -20,15 +20,19 @@ jobs:
           sudo apt install -y python3-pip
           pip3 install ansible
 
-      - name: Set up SSH key
+      - name: Set up SSH key and Ansible inventory
         run: |
-           mkdir -p ~/.ssh
-           echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/Aaa.pem
-           chmod 400 ~/.ssh/Aaa.pem
-           ssh-keyscan 54.91.12.34 >> ~/.ssh/known_hosts
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
-          
-      - name: Run Ansible Playbook to Install Nginx
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/Aaa.pem
+          chmod 400 ~/.ssh/Aaa.pem
+
+          # Create dynamic inventory
+          echo "[web]" > ansible/inventory.ini
+          echo "${{ secrets.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/Aaa.pem" >> ansible/inventory.ini
+
+          # Trust the EC2 host
+          ssh-keyscan ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
+
+      - name: Run Ansible playbook to install Nginx
         run: |
           ansible-playbook -i ansible/inventory.ini ansible/install-nginx.yml
