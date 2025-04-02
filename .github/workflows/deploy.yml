@@ -53,3 +53,16 @@ jobs:
       # Terraform Apply (Deploy the changes)
       - name: Terraform Apply
         run: terraform apply -auto-approve
+
+       - name: Save EC2 Public IP as output
+        id: extract
+        run: |
+          PUBLIC_IP=$(terraform output -raw instance_public_ip)
+          echo "public_ip=$PUBLIC_IP" >> $GITHUB_OUTPUT
+
+      - name: Upload public IP to artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ec2-ip
+          path: |
+            terraform.tfstate
