@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/Aaa.pem
-          chmod 600 ~/.ssh/Aaa.pem
+          chmod 400 ~/.ssh/Aaa.pem
           ssh-keyscan your.ec2.public.ip >> ~/.ssh/known_hosts
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
