@@ -23,11 +23,11 @@ jobs:
       - name: Set up SSH key
         run: |
            mkdir -p ~/.ssh
-           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/Aaa.pem
+           echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/Aaa.pem
            chmod 400 ~/.ssh/Aaa.pem
            ssh-keyscan 54.91.12.34 >> ~/.ssh/known_hosts
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
           
       - name: Run Ansible Playbook to Install Nginx
         run: |
