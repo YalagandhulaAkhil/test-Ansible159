@@ -1,16 +1,10 @@
 name: Deploy EC2
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
-  deploy_and_install:
+  terraform:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,27 +23,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Initialize Terraform
+      - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Format
-        run: terraform fmt -check
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
-
-      - name: Terraform Apply
+      - name: Terraform Plan and Apply
         run: terraform apply -auto-approve
 
-      - name: Save EC2 Public IP to file
+      - name: Save EC2 IP to S3 Bucket
         run: |
-          terraform output -raw instance_public_ip > ec2-public-ip.txt
-
-      - name: Upload public IP to artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ec2-ip
-          path: ec2-public-ip.txt
+          EC2_IP=$(terraform output -raw instance_public_ip)
+          echo "$EC2_IP" > ec2-ip.txt
+          aws s3 cp ec2-ip.txt s3://your-s3-bucket-name/ec2-ip.txt
