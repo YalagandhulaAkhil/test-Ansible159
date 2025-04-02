@@ -4,9 +4,10 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  configure:
     name: Install Nginx on EC2
     runs-on: ubuntu-latest
 
@@ -14,25 +15,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Download Terraform state
+        uses: actions/download-artifact@v3
+        with:
+          name: ec2-ip
+
+      - name: Install Terraform (to extract IP)
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.6
+
+      - name: Extract public IP from Terraform state
+        id: extract_ip
+        run: |
+          PUBLIC_IP=$(terraform output -state=terraform.tfstate -raw instance_public_ip)
+          echo "EC2_PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+
       - name: Install Ansible
         run: |
           sudo apt update
           sudo apt install -y python3-pip
           pip3 install ansible
 
-      - name: Set up SSH key and Ansible inventory
+      - name: Set up SSH and Inventory
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/Aaa.pem
           chmod 400 ~/.ssh/Aaa.pem
 
-          # Create dynamic inventory
           echo "[web]" > ansible/inventory.ini
-          echo "${{ secrets.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/Aaa.pem" >> ansible/inventory.ini
+          echo "$EC2_PUBLIC_IP ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/Aaa.pem ansible_python_interpreter=/usr/bin/python3" >> ansible/inventory.ini
 
-          # Trust the EC2 host
-          ssh-keyscan ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H $EC2_PUBLIC_IP >> ~/.ssh/known_hosts
 
-      - name: Run Ansible playbook to install Nginx
+      - name: Run Ansible playbook
         run: |
           ansible-playbook -i ansible/inventory.ini ansible/install-nginx.yml
