@@ -47,12 +47,12 @@ jobs:
       - name: Save EC2 Public IP as output
         id: extract
         run: |
-          PUBLIC_IP=$(terraform output -raw instance_public_ip)
+          PUBLIC_IP=$(terraform output -raw instance_public_ip | tr -d '\r')
           echo "public_ip=$PUBLIC_IP" >> $GITHUB_OUTPUT
 
       - name: Write EC2 public IP to file
         run: |
-          echo ${{ steps.extract.outputs.public_ip }} > ec2-public-ip.txt
+          echo "${{ steps.extract.outputs.public_ip }}" > ec2-public-ip.txt
 
       - name: Upload public IP to artifact
         uses: actions/upload-artifact@v4
