@@ -1,4 +1,4 @@
-name: Deploy Nginx with Ansible
+name: Deploy Nginx on EC2 via Ansible
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Install Nginx on EC2
+    name: Ansible Nginx Deployment
     runs-on: ubuntu-latest
 
     steps:
@@ -20,19 +20,20 @@ jobs:
           sudo apt install -y python3-pip
           pip3 install ansible
 
-      - name: Set up SSH key and Ansible inventory
+      - name: Set up SSH and Ansible inventory
         run: |
+          # Setup SSH key
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/Aaa.pem
           chmod 400 ~/.ssh/Aaa.pem
 
-          # Create dynamic inventory
+          # Create dynamic inventory file
           echo "[web]" > ansible/inventory.ini
           echo "${{ secrets.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/Aaa.pem" >> ansible/inventory.ini
 
-          # Trust the EC2 host
+          # Trust the EC2 instance
           ssh-keyscan ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
-      - name: Run Ansible playbook to install Nginx
+      - name: Run Ansible Playbook to install Nginx
         run: |
           ansible-playbook -i ansible/inventory.ini ansible/install-nginx.yml
